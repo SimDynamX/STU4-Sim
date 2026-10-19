@@ -1,0 +1,35 @@
+{
+    "meta":{
+
+    },
+    "Entity": {
+        "#Required": {
+            "Name": "ExplodedTank",
+            "Type": "Object",
+            "Systems": []
+        },
+        "#Object": {
+            "Mesh_Path": "StaticMesh'/Game/StaticMeshes/StaticStructures/AsteroidInfrastructure/StaticMeshes/ExplodedTank.ExplodedTank'"
+        },
+        "Dynamics": {
+            "Propagator": "Unreal_Chaos",
+            "Mass": 700.0,
+            "Inertia_BodyFrame": [
+                "doubleM3x3",
+                66.666666666666667, -25, -25,
+                -25, 66.666666666666667, -25,
+                -25, -25, 66.666666666666667
+            ],
+            "PhysicsSyncFreq": 1.0,
+            "PhysicsApplyFreq": 1.0
+        },
+        "Graphics": {
+            "Scale": 1,
+            "RenderFar": false,
+			"VisualRadius_m": 8.5
+        },
+        "RadarDiameter_m": 17.0,
+        "ScaleMin": 1.0,
+        "ScaleMax": 1.0
+    }
+}

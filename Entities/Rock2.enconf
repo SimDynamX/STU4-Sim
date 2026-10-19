@@ -1,0 +1,35 @@
+{
+    "meta":{
+
+    },
+    "Entity": {
+        "#Required": {
+            "Name": "Rock2",
+            "Type": "Object",
+            "Systems": []
+        },
+        "#Object": {
+            "Mesh_Path": "StaticMesh'/Game/StaticMeshes/Nature/LunarRocks/67016-412_DRAFT_LOD1.67016-412_DRAFT_LOD1'"
+        },
+        "Dynamics": {
+            "Propagator": "Unreal_Chaos",
+            "Mass": 0.3,
+            "Inertia_BodyFrame": [
+                "doubleM3x3",
+                66.666666666666667, -25, -25,
+                -25, 66.666666666666667, -25,
+                -25, -25, 66.666666666666667
+            ],
+            "PhysicsSyncFreq": 1.0,
+            "PhysicsApplyFreq": 1.0
+        },
+        "Graphics": {
+            "Scale": 1,
+            "RenderFar": false,
+			"VisualRadius_m": 0.025
+        },
+        "RadarDiameter_m": 0.05,
+        "ScaleMin": 20.0,
+        "ScaleMax": 800.0
+    }
+}
