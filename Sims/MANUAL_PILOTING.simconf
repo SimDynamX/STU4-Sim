@@ -36305,6 +36305,7 @@
 			},
 			{
 				"#Pawn": {
+					"2D_Only": true,
 					"BP_Path": "/Game/SpaceCraft_UI/FlatScreen/UIP2D_Spectator.UIP2D_Spectator_C",
 					"CamProjMatrix": [
 						"doubleM4x4",
@@ -36347,6 +36348,7 @@
 					],
 					"Is_Possessed": false,
 					"Role_Name": "2D Flying Spectator",
+					"Role_Description": "Freely fly around the simulation to observe it from any angle.\n\nControls:\nHold down right click and move mouse to move camera.\nW/A/S/D to move forward, left, down, and right.\nLeft-ctrl to descend and space bar to ascend.",
 					"Username": "(No User)"
 				},
 				"#Required": {
@@ -36421,6 +36423,7 @@
 			},
 			{
 				"#Pawn": {
+					"2D_Only": true,
 					"BP_Path": "/Game/SpaceCraft_UI/FlatScreen/UIP2D_Seated.UIP2D_Seated_C",
 					"BP_Path_Orbit": "/Game/SpaceCraft_UI/FlatScreen/UIP2D_Orbit.UIP2D_Orbit_C",
 					"BP_Path_Seated": "/Game/SpaceCraft_UI/FlatScreen/UIP2D_Seated.UIP2D_Seated_C",
@@ -36466,6 +36469,7 @@
 					],
 					"Is_Possessed": false,
 					"Role_Name": "Pilot (First-person)",
+					"Role_Description": "Pilot the shuttle from a first person perspective.\n\nControls:\nHold down right click and move mouse to look around the interior.\nI/J/K/L to move up, left, down, and right.\nH/N to move forwards and backwards.\nUp/Left/Down/Right arrow keys to adjust pitch and yaw.\n0/9 keys to adjust roll.",
 					"Username": "(No User)"
 				},
 				"#Required": {
@@ -36589,6 +36593,7 @@
 					],
 					"Is_Possessed": false,
 					"Role_Name": "VR Pilot",
+					"Role_Description": "Pilot the shuttle in Virtual Reality.\n\nControls:\nTHC controller (left side of cockpit) can be moved up/down/left/right to move the shuttle in those directions. It can also be pushed in and out to move forwards and backwards.\nFlight stick (on right side of cockpit) can be moved forwards/backwards/left/right to pitch or roll the shuttle. It can also be twisted clockwise/counter-clockwise to control yaw.",
 					"Username": "(No User)"
 				},
 				"#Required": {
@@ -36678,6 +36683,7 @@
 			},
 			{
 				"#Pawn": {
+					"2D_Only": true,
 					"BP_Path": "/Game/SpaceCraft_UI/FlatScreen/UIP2D_Orbit.UIP2D_Orbit_C",
 					"BP_Path_Orbit": "/Game/SpaceCraft_UI/FlatScreen/UIP2D_Orbit.UIP2D_Orbit_C",
 					"BP_Path_Seated": "/Game/SpaceCraft_UI/FlatScreen/UIP2D_Seated.UIP2D_Seated_C",
@@ -36723,6 +36729,7 @@
 					],
 					"Is_Possessed": false,
 					"Role_Name": "Pilot (Third-person)",
+					"Role_Description": "Pilot the shuttle from a third-person orbiting perspective.\n\nControls:\nHold down right click and move mouse to look around the interior.\nScroll wheel up/down to adjust zoom level.\nI/J/K/L to move up, left, down, and right.\nH/N to move forwards and backwards.\nUp/Left/Down/Right arrow keys to adjust pitch and yaw.\n0/9 keys to adjust roll.",
 					"Username": "(No User)"
 				},
 				"#Required": {
@@ -37512,7 +37519,8 @@
 					0.0,
 					0.0,
 					0.0
-				]
+				],
+				"InvertPitch": true
 			},
 			{
 				"#BP": {
@@ -37595,7 +37603,8 @@
 					0.0,
 					0.0,
 					0.0
-				]
+				],
+				"InvertY": true
 			},
 			{
 				"#Required": {
