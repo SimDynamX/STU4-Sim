@@ -119,6 +119,10 @@ while not exit_flag:
         entity.SetParam(st.VarType.double, ["ControlCmd", "THC", "X"], thc_vector[0])
         entity.SetParam(st.VarType.double, ["ControlCmd", "THC", "Y"], thc_vector[1])
         entity.SetParam(st.VarType.double, ["ControlCmd", "THC", "Z"], thc_vector[2])
+    else:
+        entity.SetParam(st.VarType.double, ["ControlCmd", "THC", "X"], 0)
+        entity.SetParam(st.VarType.double, ["ControlCmd", "THC", "Y"], 0)
+        entity.SetParam(st.VarType.double, ["ControlCmd", "THC", "Z"], 0)
 
     # Ordered as x,y,z components of angular velocity, not euler angles
     rhc_vector = np.array([rhc.GetParam(st.VarType.double, ["RHC", "Roll_Right"]), 
@@ -128,7 +132,10 @@ while not exit_flag:
         entity.SetParam(st.VarType.double, ["ControlCmd", "RHC", "Roll_Right"], rhc_vector[0])
         entity.SetParam(st.VarType.double, ["ControlCmd", "RHC", "Pitch_Down"], rhc_vector[1])
         entity.SetParam(st.VarType.double, ["ControlCmd", "RHC", "Yaw_Left"], rhc_vector[2])
-
+    else:
+        entity.SetParam(st.VarType.double, ["ControlCmd", "RHC", "Roll_Right"], 0)
+        entity.SetParam(st.VarType.double, ["ControlCmd", "RHC", "Pitch_Down"], 0)
+        entity.SetParam(st.VarType.double, ["ControlCmd", "RHC", "Yaw_Left"], 0)
 
     time.sleep(1.0 / this.GetParam(st.VarType.double, "LoopFreqHz"))
 
