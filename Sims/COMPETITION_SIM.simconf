@@ -41806,7 +41806,7 @@
 				"Active": true,
 				"Inst_Parameters": {
 					"DamageThreshold_J": 2.092e5,
-					"NominalFuel_kg": 1.15,
+					"NominalFuel_kg": 75.0,
 					"NominalTime_s": 120.0,
 					"KeepOutRadius_m": 50.0,
 					"Shuttle": [

@@ -105,25 +105,46 @@ def GetOnJets(thrusters_to_fire, num_jets) -> list[float]:
     return on_jets
 
 
-def GetEffectiveForceAndTorque(A, thrusters_to_fire):
-    control = np.zeros(6)
-    for i in range(A.shape[0]):
-        if i in thrusters_to_fire:
-            control += A[i]
-    return control
+# def GetEffectiveForceAndTorque(A, thrusters_to_fire):
+#     control = np.zeros(6)
+#     for i in range(A.shape[0]):
+#         if i in thrusters_to_fire:
+#             control += A[i]
+#     return control
 
 
-def GetEffectiveForceAndTorque_VariableOnTime(A, onTimes, dt_tick: float):
+def remap(val, in_lower, in_upper, out_lower, out_upper):
+    in_diff = in_upper - in_lower
+    if in_diff == 0.0:
+        return out_lower
+    factor = (val - in_lower) / in_diff
+    out_val = out_lower + factor * (out_upper - out_lower)
+    if out_val > out_upper:
+        return out_upper
+    elif out_val < out_lower:
+        return out_lower
+    return out_val
+
+
+def GetEffectiveImpulseAndFuelUse(activityVectorMatrix: np.typing.NDArray, mass: float, 
+                                  inertia: np.typing.NDArray, onTimes: list[float], dt_tick: float):
     g0: float = 9.8
     Isp: float = 80.0
-    control = np.zeros(6)
+    impulse = np.zeros(6)
     fuelUsage = 0.0
-    for i in range(A.shape[0]):
-        timeToFire = abs(onTimes[i])# * dt_tick
-        thisControl = timeToFire * A[i]
-        control += thisControl
-        fuelUsage += np.linalg.norm(thisControl[0:3]) / (Isp * g0)
-    return control, fuelUsage
+    maxOnTime = max(max(onTimes), 0.0)
+    if maxOnTime < 1e-12:
+        return impulse, fuelUsage
+    
+    for i in range(activityVectorMatrix.shape[0]):
+        # timeToFire = abs(onTimes[i])
+        # timeToFire = max(onTimes[i], 0.0)
+        timeToFire = remap(max(onTimes[i], 0.0), 0.0, maxOnTime, 0.0, min(dt_tick, maxOnTime))
+        thisActivity = min(timeToFire, dt_tick) * activityVectorMatrix[i]
+        thisImpulse = np.concat((mass * thisActivity[0:3], inertia @ thisActivity[3:6]))
+        impulse += thisImpulse
+        fuelUsage += np.linalg.norm(thisImpulse[0:3]) / (Isp * g0)
+    return impulse, fuelUsage
 
 """
 https://ahrs.readthedocs.io/en/latest/filters/angular.html
@@ -188,16 +209,6 @@ def Quat_to_DCM(q):
     return C
 
 
-def remap(val, in_lower, in_upper, out_lower, out_upper):
-    factor = (val - in_lower) / (in_upper - in_lower)
-    out_val = out_lower + factor * (out_upper - out_lower)
-    if out_val > out_upper:
-        return out_upper
-    elif out_val < out_lower:
-        return out_lower
-    return out_val
-
-
 def AverageQuaternions(quaternions):
     """
     Calculate average quaternion
@@ -252,10 +263,16 @@ en.AddOrSetParam(st.VarType.bool, ["RCSConfig", "Ready"], True)
 # System update loop:
 t0: st.timestamp = st.SimGlobals.SimClock.GetTimeNow()
 sim_elapsed_time: float = 0.0
+impulseCounter: int = 0
 while not exit_flag:
     ### BEGIN THIS TIMESTEP ###
     tf: st.timestamp = st.SimGlobals.SimClock.GetTimeNow()
     dt: datetime.timedelta = tf.as_datetime() - t0.as_datetime()
+    if dt.total_seconds() <= 0.0:
+        t0 = tf
+        sim_elapsed_time += dt.total_seconds()
+        time.sleep(1.0 / this.GetParam(dbl, "LoopFreqHz"))
+        continue
 
     # CCT params:
     mass = en.getMass()
@@ -265,6 +282,11 @@ while not exit_flag:
     accCommand = IfHas_GetParam(en, dv3, ["JetSelection", "CommandedAccel"], np.zeros(3))
     angAccCommand = IfHas_GetParam(en, dv3, ["JetSelection", "CommandedAngAccel"], np.zeros(3))
 
+    if np.isnan(accCommand).any():
+        raise Exception("Error: accCommand was NaN")
+    if np.isnan(angAccCommand).any():
+        raise Exception("Error: angAccCommand was NaN")
+
     maxAccel: float = en.GetParam(st.VarType.double, ["Thrusters", "MaxAccel_m_s2"])
     maxAngAccel: float = en.GetParam(st.VarType.double, ["Thrusters", "MaxAngAccel_rad_s2"])
     if np.linalg.norm(accCommand) > maxAccel:
@@ -273,13 +295,13 @@ while not exit_flag:
         angAccCommand = maxAngAccel * angAccCommand / np.linalg.norm(angAccCommand)
 
     # Command angular accel
-    u_acc_jetsel = np.zeros(3)
-    u_angacc_jetsel = np.zeros(3)
+    linearImpulse = np.zeros(3)
+    angularImpulse = np.zeros(3)
 
     if not np.isnan(np.linalg.norm(angAccCommand)):
         # Activity vectors and simplex method setup:
-        A = ComputeActivityVectors(X, Y, Z, NX, NY, NZ, T, num_main_jets, mass, I_inv)
-        A = np.asarray(A)
+        activityVectorMatrix = ComputeActivityVectors(X, Y, Z, NX, NY, NZ, T, num_main_jets, mass, I_inv)
+        activityVectorMatrix = np.asarray(activityVectorMatrix)
         C = np.full(num_main_jets, 1.0)
         b = np.hstack((accCommand, angAccCommand))
 
@@ -289,14 +311,21 @@ while not exit_flag:
         norm_b = np.linalg.norm(b)
         onTimes = np.zeros(num_main_jets)
         if norm_b > 1e-9 and norm_b != np.inf and not np.isnan(norm_b):
-            result = optimize.linprog(C, A_eq=A.T, b_eq=b, method='revised simplex')
+            result = optimize.linprog(C, A_eq=activityVectorMatrix.T, b_eq=b, method='revised simplex')
             onTimes = result.x
             thrusters_to_fire = GetThrustersToFire(result.x, dt_min, dt.total_seconds())
 
+        # st.OnScreenLogMessage(f"OnTimes = {onTimes}", "JetSelect", st.Severity.Info)
+
         # Actual controls and jets to turn on:
-        control, fuelUsage = GetEffectiveForceAndTorque_VariableOnTime(A, onTimes, dt.total_seconds())
-        u_acc_jetsel += control[0:3]
-        u_angacc_jetsel += control[3:6]
+        if np.isnan(onTimes).any():
+            raise Exception("Error: onTimes had a NaN")
+        if np.isnan(activityVectorMatrix).any():
+            raise Exception("Error: activityVectorMatrix had a NaN")
+        
+        impulse, fuelUsage = GetEffectiveImpulseAndFuelUse(activityVectorMatrix, mass, I, onTimes, dt.total_seconds())
+        linearImpulse += impulse[0:3]
+        angularImpulse += impulse[3:6]
         on_jets = GetOnJets(thrusters_to_fire, num_main_jets)
         if en.HasParamArray(["RCSConfig", "OnThrustersMain"]):
             en.SetParamArray(st.VarType.double, ["RCSConfig", "OnThrustersMain"], thrusters_to_fire)
@@ -306,33 +335,48 @@ while not exit_flag:
         prev_fuelUsage: float = en.GetParam(st.VarType.double, ["Stats", "FuelUsed"])
         en.SetParam(st.VarType.double, ["Stats", "FuelUsed"], prev_fuelUsage + fuelUsage)
     
-    en.AddOrSetParam(dv3, ["JetSelection", "ResultantAccel"], u_acc_jetsel)
-    en.AddOrSetParam(dv3, ["JetSelection", "ResultantAngAccel"], u_angacc_jetsel)
+    # en.AddOrSetParam(dv3, ["JetSelection", "ResultantAccel"], u_acc_jetsel)
+    # en.AddOrSetParam(dv3, ["JetSelection", "ResultantAngAccel"], u_angacc_jetsel)
 
     # st.OnScreenAlert(f"Jet selection commanded force:  {mass * u_acc_jetsel}", "JetSelectionForce", st.Severity.Info)
     # st.OnScreenAlert(f"Jet selection commanded torque: {I @ u_angacc_jetsel}", "JetSelectionTorque", st.Severity.Info)
 
     directCommand: bool = this.GetParam(st.VarType.bool, "DirectCommand")
 
-    forceEffect = st.PhysEffect(st.PhysEffectType.Force, bodyFrame)
-    if directCommand:
-        forceEffect.setVector(mass * accCommand)
-    else:
-        forceEffect.setVector(mass * u_acc_jetsel)
-    en.setPhysEffect("ThrusterForce", forceEffect)
+    if np.isnan(linearImpulse).any():
+        raise Exception("Error: linearImpulse was NaN")
+    if np.isnan(angularImpulse).any():
+        raise Exception("Error: angularImpulse was NaN")
 
-    torqueEffect = st.PhysEffect(st.PhysEffectType.Torque, bodyFrame)
     if directCommand:
-        torqueEffect.setVector(I @ angAccCommand)
+        forceEffect = st.PhysEffect(st.PhysEffectType.Force, bodyFrame)
+        forceEffect.setVector(mass * accCommand)
+        en.setPhysEffect("ThrusterForce", forceEffect)
     else:
-        torqueEffect.setVector(I @ u_angacc_jetsel)
-    en.setPhysEffect("ThrusterTorque", torqueEffect)
+        linearImpulseEffect = st.PhysEffect(st.PhysEffectType.Impulse, bodyFrame)
+        linearImpulseEffect.setVector(linearImpulse)
+        # linearImpulseEffect.setStartTime(t0)
+        # linearImpulseEffect.setEndTime(tf)
+        en.setPhysEffect(f"LinImpulse{impulseCounter}", linearImpulseEffect)
+
+    if directCommand:
+        torqueEffect = st.PhysEffect(st.PhysEffectType.Torque, bodyFrame)
+        torqueEffect.setVector(I @ angAccCommand)
+        en.setPhysEffect("ThrusterTorque", torqueEffect)
+    else:
+        angularImpulseEffect = st.PhysEffect(st.PhysEffectType.AngImpulse, bodyFrame)
+        angularImpulseEffect.setVector(angularImpulse)
+        # angularImpulseEffect.setStartTime(t0)
+        # angularImpulseEffect.setEndTime(tf)
+        en.setPhysEffect(f"AngImpulse{impulseCounter}", angularImpulseEffect)
 
     ### END THIS TIMESTEP ###
 
     # st.OnScreenAlert("q = " + str(np.round(en.getRotation().Quat_WRT(resFrame), 3)), "Attitude", st.Severity.Info)
     # st.OnScreenAlert("w = " + str(np.round(en.getAngVelocity().WRT_ExprIn(resFrame) * 180.0 / np.pi, 3)), "AngVel", st.Severity.Info)
     
+    impulseCounter += 1
+
     t0 = tf
     sim_elapsed_time += dt.total_seconds()
     time.sleep(1.0 / this.GetParam(dbl, "LoopFreqHz"))
