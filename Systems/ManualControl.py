@@ -109,6 +109,9 @@ listener.start()
 thc : st.Entity = this.GetParam(st.VarType.entityRef, "thc")
 rhc : st.Entity = this.GetParam(st.VarType.entityRef, "rhc")
 
+hasEverHadTHC: bool = False
+hasEverHadRHC: bool = False
+
 exit_flag = False
 while not exit_flag:
     entity: st.Entity = st.get_entities()[0]
@@ -116,10 +119,11 @@ while not exit_flag:
                            thc.GetParam(st.VarType.double, ["THC", "Y"]),
                            thc.GetParam(st.VarType.double, ["THC", "Z"])])
     if np.any(thc_vector):
+        hasEverHadTHC = True
         entity.SetParam(st.VarType.double, ["ControlCmd", "THC", "X"], thc_vector[0])
         entity.SetParam(st.VarType.double, ["ControlCmd", "THC", "Y"], thc_vector[1])
         entity.SetParam(st.VarType.double, ["ControlCmd", "THC", "Z"], thc_vector[2])
-    else:
+    elif hasEverHadTHC:
         entity.SetParam(st.VarType.double, ["ControlCmd", "THC", "X"], 0)
         entity.SetParam(st.VarType.double, ["ControlCmd", "THC", "Y"], 0)
         entity.SetParam(st.VarType.double, ["ControlCmd", "THC", "Z"], 0)
@@ -129,10 +133,11 @@ while not exit_flag:
                            rhc.GetParam(st.VarType.double, ["RHC", "Pitch_Down"]),
                            rhc.GetParam(st.VarType.double, ["RHC", "Yaw_Left"])])
     if np.any(rhc_vector):
+        hasEverHadRHC = True
         entity.SetParam(st.VarType.double, ["ControlCmd", "RHC", "Roll_Right"], rhc_vector[0])
         entity.SetParam(st.VarType.double, ["ControlCmd", "RHC", "Pitch_Down"], rhc_vector[1])
         entity.SetParam(st.VarType.double, ["ControlCmd", "RHC", "Yaw_Left"], rhc_vector[2])
-    else:
+    elif hasEverHadRHC:
         entity.SetParam(st.VarType.double, ["ControlCmd", "RHC", "Roll_Right"], 0)
         entity.SetParam(st.VarType.double, ["ControlCmd", "RHC", "Pitch_Down"], 0)
         entity.SetParam(st.VarType.double, ["ControlCmd", "RHC", "Yaw_Left"], 0)
