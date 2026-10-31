@@ -54,7 +54,7 @@ def DamagePenalty(damageTaken_J: float, maxAllowedDamage_J: float) -> float:
 
 
 def FuelPenalty(fuelUsed_kg: float, nominalFuel_kg: float) -> float:
-    return max(fuelUsed_kg / nominalFuel_kg - 1.0, 0.0)
+    return max(fuelUsed_kg / nominalFuel_kg, 0.0)
 
 
 def FullScoreWin(time_s: float, nominalTime_s: float, damageTaken_J: float, maxAllowedDamage_J: float, fuelUsed_kg: float, nominalFuel_kg: float) -> float:
@@ -86,6 +86,8 @@ def TooMuchDamage(damageTaken_J: float, maxAllowedDamage_J: float) -> None:
 
 t0: st.timestamp = st.SimGlobals.SimClock.GetTimeNow()
 initial_distanceToShip: float = np.linalg.norm(shuttle.getLocation().WRT_ExprIn(targetFrame))
+
+st.OnScreenAlert("Backend Sim Version: 2026/10/30", "SimVersion", st.Severity.Info)
 
 sim_elapsed_time: float = 0.0
 exit_flag: bool = False
