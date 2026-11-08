@@ -41788,7 +41788,7 @@
 					"LoopFreqHz": 120.0,
 					"NumDebris": [
 						"int32",
-						200
+						500
 					],
 					"Phobos": [
 						"EntityRef",
