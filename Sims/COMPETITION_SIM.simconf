@@ -37262,14 +37262,14 @@
 				"NoClip": true,
 				"RotateToEntity": [
 					"EntityRef",
-					"SpaceBuggy"
+					"Phobos"
 				],
 				"Rotation": [
 					"doubleV4",
-					-0.9848614817870476,
-					-0.16855626602590093,
-					0.03977804037301114,
-					0.007372542282663711
+					0.0,
+					0.0,
+					0.0,
+					1.0
 				],
 				"Seated": {
 					"AttachedToEntity": [

@@ -87,7 +87,7 @@ def TooMuchDamage(damageTaken_J: float, maxAllowedDamage_J: float) -> None:
 t0: st.timestamp = st.SimGlobals.SimClock.GetTimeNow()
 initial_distanceToShip: float = np.linalg.norm(shuttle.getLocation().WRT_ExprIn(targetFrame))
 
-st.OnScreenAlert("Backend Sim Version: 2026/10/30", "SimVersion", st.Severity.Info)
+st.OnScreenAlert("Backend Sim Version: 2026/11/11", "SimVersion", st.Severity.Info)
 
 sim_elapsed_time: float = 0.0
 exit_flag: bool = False

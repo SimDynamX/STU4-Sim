@@ -69,7 +69,7 @@ for i in range(len(debrisEntityConfigPaths)):
 
 debrisEntities: list[st.Entity] = []
 
-seed = 100
+seed = 8193
 rng = np.random.default_rng(seed)
 numDebris: int = this.GetParam(st.VarType.int32, "NumDebris")
 if doSpawning:
